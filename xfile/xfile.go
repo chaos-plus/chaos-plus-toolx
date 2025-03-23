@@ -167,9 +167,9 @@ func RemoveFile(path ...string) error {
 	}
 	for _, p := range path {
 		if err := os.Remove(p); err != nil {
-            if os.IsNotExist(err) {
-                continue
-            }
+			if os.IsNotExist(err) {
+				continue
+			}
 			return err
 		}
 	}
@@ -209,14 +209,12 @@ func CopyDir(srcDir, dstDir string, overwrite bool) error {
 
 		return CopyFile(path, destPath, overwrite)
 	})
-
 	if err != nil {
 		return fmt.Errorf("error copying directory: %v", err)
 	}
 	return nil
 }
 
-// CopyFile copies a single file from srcFile to dstFile
 func CopyFile(srcFile, dstFile string, overwrite bool) error {
 	if IsDirectory(srcFile) {
 		return fmt.Errorf("source path %s is a directory", srcFile)
@@ -224,17 +222,31 @@ func CopyFile(srcFile, dstFile string, overwrite bool) error {
 	if IsDirectory(dstFile) {
 		return fmt.Errorf("destination path %s is a directory", dstFile)
 	}
-
 	src, err := os.Open(srcFile)
 	if err != nil {
 		return fmt.Errorf("failed to open source file %s: %v", srcFile, err)
 	}
 	defer src.Close()
+	err = CopyToFile(src, dstFile, overwrite)
+	if err != nil {
+		return err
+	}
+	srcInfo, err := os.Stat(srcFile)
+	if err != nil {
+		return err
+	}
+	return os.Chmod(dstFile, srcInfo.Mode())
+}
 
-	if IsExist(dstFile) && overwrite {
-		err := RemoveFile(dstFile)
-		if err != nil {
-			return fmt.Errorf("failed to remove destination file %s: %v", dstFile, err)
+func CopyToFile(srcFile io.Reader, dstFile string, overwrite bool) error {
+	if IsExist(dstFile) {
+		if overwrite {
+			err := RemoveFile(dstFile)
+			if err != nil {
+				return fmt.Errorf("failed to remove destination file %s: %v", dstFile, err)
+			}
+		} else {
+			return fmt.Errorf("dest file is already exists: %s", dstFile)
 		}
 	}
 
@@ -244,14 +256,9 @@ func CopyFile(srcFile, dstFile string, overwrite bool) error {
 	}
 	defer dst.Close()
 
-	_, err = io.Copy(dst, src)
+	_, err = io.Copy(dst, srcFile)
 	if err != nil {
 		return fmt.Errorf("failed to copy file from %s to %s: %v", srcFile, dstFile, err)
 	}
-
-	srcInfo, err := os.Stat(srcFile)
-	if err != nil {
-		return err
-	}
-	return os.Chmod(dstFile, srcInfo.Mode())
+	return nil
 }

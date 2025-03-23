@@ -38,4 +38,13 @@ func TestRes(t *testing.T) {
 	sql, err := res.GetContent("data_test/sql/kv.sql")
 	require.NoError(t, err)
 	require.Contains(t, string(sql), "CREATE TABLE kv")
+
+	err = res.Export("data_test/public", "export_test", true)
+	require.NoError(t, err)
+
+	err = res.Export("data_test", "export_test", true)
+	require.NoError(t, err)
+
+	err = res.Export("data_test", "export_test", false)
+	require.Error(t, err)
 }

@@ -6,6 +6,9 @@ import (
 	"io"
 	"io/fs"
 	"path/filepath"
+	"strings"
+
+	"github.com/chaos-plus/chaos-plus-toolx/xfile"
 )
 
 type ResFile struct {
@@ -23,7 +26,6 @@ func New(root embed.FS) *ResFiles {
 	return &ResFiles{Root: root}
 }
 
-
 func (r *ResFiles) DumpAll() error {
 	items, err := r.ScanAll()
 	if err != nil {
@@ -34,7 +36,6 @@ func (r *ResFiles) DumpAll() error {
 	}
 	return nil
 }
-
 
 func (r *ResFiles) ScanAll() ([]ResFile, error) {
 	return r.Scan(".", true)
@@ -51,7 +52,7 @@ func (r *ResFiles) Scan(path string, recursive bool) ([]ResFile, error) {
 		return nil, err
 	}
 	list := []ResFile{}
-	if path!="."{
+	if path != "." {
 		list = append(list, ResFile{
 			Name:  stat.Name(),
 			Path:  path,
@@ -108,7 +109,6 @@ func (r *ResFiles) ScanDirFile(path string, pattern string, recursive bool) ([]R
 	return list, nil
 }
 
-
 func (r *ResFiles) GetDirs() ([]string, error) {
 	items, err := r.ScanAll()
 	if err != nil {
@@ -122,7 +122,6 @@ func (r *ResFiles) GetDirs() ([]string, error) {
 	}
 	return dirs, nil
 }
-
 
 func (r *ResFiles) GetFiles() ([]string, error) {
 	items, err := r.ScanAll()
@@ -153,4 +152,28 @@ func (r *ResFiles) GetContent(path string) ([]byte, error) {
 	}
 	defer file.Close()
 	return io.ReadAll(file)
+}
+
+func (r *ResFiles) Export(from, to string, overwrite bool) error {
+	files, err := r.Scan(from, true)
+	if err != nil {
+		return err
+	}
+	prefix := xfile.GetParentDirectory(from)
+	for _, file := range files {
+		toFile := filepath.Join(to, strings.TrimPrefix(file.Path, prefix))
+		if file.IsDir {
+			xfile.MkdirAll(toFile)
+			continue
+		}
+		reader, err := r.Root.Open(file.Path)
+		if err != nil {
+			return err
+		}
+		err = xfile.CopyToFile(reader, toFile, overwrite)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
