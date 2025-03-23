@@ -154,14 +154,83 @@ func (r *ResFiles) GetContent(path string) ([]byte, error) {
 	return io.ReadAll(file)
 }
 
+func (r *ResFiles) IsExist(path string) (bool, error) {
+	info, err := r.GetFileInfo(path)
+	if err != nil {
+		return false, err
+	}
+	return info != nil, nil
+}
+
+func (r *ResFiles) IsFile(path string) (bool, error) {
+	info, err := r.GetFileInfo(path)
+	if err != nil {
+		return false, err
+	}
+	return !info.IsDir(), nil
+}
+
+func (r *ResFiles) IsDir(path string) (bool, error) {
+	info, err := r.GetFileInfo(path)
+	if err != nil {
+		return false, err
+	}
+	return info.IsDir(), nil
+}
+
 func (r *ResFiles) Export(from, to string, overwrite bool) error {
+	if !xfile.IsExist(from) {
+		return fmt.Errorf("source path not exist: %s", from)
+	}
 	files, err := r.Scan(from, true)
 	if err != nil {
 		return err
 	}
-	prefix := xfile.GetParentDirectory(from)
+	if len(files) == 0 {
+		return fmt.Errorf("no items found in path: %s", from)
+	}
+
+	fromInfo, err := r.GetFileInfo(from)
+	if err != nil {
+		return err
+	}
+
+	fromIsDir := fromInfo.IsDir()
+	toIsDir := fromIsDir
+
+	if xfile.IsExist(to) {
+		toIsDir = xfile.IsDirectory(to)
+	}
+
+	if fromIsDir && !toIsDir {
+		return fmt.Errorf("source path is directory, but target path is not: %s", to)
+	}
+
+	if !fromIsDir {
+		reader, err := r.Root.Open(from)
+		if err != nil {
+			return err
+		}
+		defer reader.Close()
+		if toIsDir {
+			toFile := filepath.Join(to, fromInfo.Name())
+			err = xfile.CopyToFile(reader, toFile, overwrite)
+		} else {
+			err = xfile.CopyToFile(reader, to, overwrite)
+		}
+		return err
+	}
+
+	toBaseDir := ""
+	if xfile.IsDirectory(to) && toIsDir {
+		toBaseDir = filepath.Join(to, fromInfo.Name())
+	} else {
+		toBaseDir = to
+	}
+
 	for _, file := range files {
-		toFile := filepath.Join(to, strings.TrimPrefix(file.Path, prefix))
+		relatedPath := strings.TrimPrefix(file.Path, from)
+		toFile := filepath.Join(toBaseDir, relatedPath)
 		if file.IsDir {
 			xfile.MkdirAll(toFile)
 			continue

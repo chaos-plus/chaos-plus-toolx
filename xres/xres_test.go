@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/chaos-plus/chaos-plus-toolx/xfile"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,7 +40,12 @@ func TestRes(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, string(sql), "CREATE TABLE kv")
 
+	xfile.RemoveAll("export_test")
+
 	err = res.Export("data_test/public", "export_test", true)
+	require.NoError(t, err)
+
+	err = res.Export("data_test/public", "export_test/public", true)
 	require.NoError(t, err)
 
 	err = res.Export("data_test", "export_test", true)
