@@ -15,6 +15,26 @@ func CamelToSnake(str string) string {
 	return v
 }
 
+func ExtractNumbers(input string) string {
+	var numbers string
+	for _, char := range input {
+		if char >= '0' && char <= '9' {
+			numbers += string(char)
+		}
+	}
+	return numbers
+}
+
+func ExtractAlphabets(input string) string {
+	var alphabets string
+	for _, char := range input {
+		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') {
+			alphabets += string(char)
+		}
+	}
+	return alphabets
+}
+
 func SnakeToCamel(str string) string {
 	v, _ := SnakeToCamelE(str)
 	return v
