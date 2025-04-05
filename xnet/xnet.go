@@ -12,8 +12,8 @@ import (
 func GetWanIpv4() string {
 	providers := []string{
 		"https://ifconfig.me/ip",
-		"myip.ipip.net",
-		"ipinfo.io",
+		"https://myip.ipip.net",
+		"https://ipinfo.io",
 	}
 	for _, provider := range providers {
 		resp, err := http.Get(provider)
@@ -131,7 +131,7 @@ func GetLanAll() map[string]string {
 				continue // 非ipv4
 			}
 			mac := i.HardwareAddr
-			if mac == nil {
+			if mac == nil || mac.String() == "" {
 				continue
 			}
 			lanAll[ip.String()] = mac.String()
