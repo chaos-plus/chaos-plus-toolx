@@ -159,11 +159,23 @@ func IsInterfacePhysical(inf net.Interface) bool {
 
 func IsVirtualInterfaceName(name string) bool {
 	virtualKeywords := []string{
+		// 通用虚拟网卡 / 容器环境 / 虚拟机环境
 		"loopback", "virtual", "docker", "veth", "cali", "vbox", "vmnet", "vnic",
-		"flannel", "br-", "macvlan", "weave", "virbr", "ovs", "br0",
-		"br1", "tun", "wg", "tap", "wsl", "hyper-v", "eth0:avahi",
+		"flannel", "macvlan", "weave", "virbr", "ovs", "wsl", "hyper-v", "eth0:avahi",
+
+		// Linux 中常见的虚拟接口名
 		"lo", "bond", "dummy", "ifb", "ipoib", "macvtap", "qbr", "qvb",
-		"qvo", "qr-", "tap-", "tunl", "gretap", "gre", "ip6tnl",
+		"qvo", "qr-", "tap-", "tun", "tunl", "wg", "gretap", "gre", "ip6tnl",
+		"br-", "br0", "br1", // Linux 桥接网络（br-xxx）和默认桥接名
+
+		// macOS 虚拟接口名
+		"awdl",   // Apple Wireless Direct Link
+		"llw",    // Link-local only interface
+		"ap",     // Apple Personal Area Network
+		"bridge", // macOS 桥接接口（如 bridge0）
+		"en5",    // 虚拟网卡常用编号之一（如 Parallels、VMware 创建）
+
+		// Windows 中文系统中可能出现的名称
 		"本地连接", "*",
 	}
 	for _, keyword := range virtualKeywords {

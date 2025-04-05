@@ -67,6 +67,9 @@ func GetNetInfo() ([]NetInfo, error) {
 		if xnet.IsVirtualInterfaceName(inf.Name) {
 			continue
 		}
+		if inf.HardwareAddr == "" {
+			continue
+		}
 		list = append(list, NetInfo{
 			Index: int32(inf.Index),
 			Name:  inf.Name,
