@@ -15,7 +15,7 @@ func SetInteruptionSignal(hook func()) chan<- os.Signal {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		fmt.Println("\r\nCtrl+C pressed in Terminal") 
+		fmt.Println("\r\nThe process has been interrupted")
 		hook()
 	}()
 	return c

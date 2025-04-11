@@ -1,6 +1,6 @@
 module github.com/chaos-plus/chaos-plus-toolx
 
-go 1.23.4
+go 1.23.5
 
 require (
 	github.com/deckarep/golang-set/v2 v2.8.0
