@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
+	"syscall"
 )
 
 type Runner struct {
@@ -68,6 +70,9 @@ func (r *Runner) Run() error {
 	cmd.Env = r.Env
 	cmd.Stdout = r.Stdout
 	cmd.Stderr = r.Stderr
+	if runtime.GOOS == "windows" {
+		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	}
 	return cmd.Run()
 }
 
