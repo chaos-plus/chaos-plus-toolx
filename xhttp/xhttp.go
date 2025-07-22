@@ -81,8 +81,5 @@ func GetClientIP(r *http.Request) string {
 			ip = ip[:idx]
 		}
 	}
-	if ip == "" {
-		return "unknown"
-	}
 	return ip
 }
