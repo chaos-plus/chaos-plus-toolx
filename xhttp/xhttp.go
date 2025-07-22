@@ -1,6 +1,7 @@
 package xhttp
 
 import (
+	"net"
 	"net/http"
 	"strings"
 
@@ -58,28 +59,41 @@ func GetUserAgent(r *http.Request) string {
 }
 
 func GetClientIP(r *http.Request) string {
-	ip := r.Header.Get("X-Real-IP")
-	if ip == "" {
-		ip = r.Header.Get("X-Forwarded-For")
-		if ip != "" {
-			ips := strings.Split(ip, ",")
-			ip = strings.TrimSpace(ips[0])
+	// 1. 从标准代理头中获取
+	headers := []string{
+		"X-Real-IP",
+		"X-Forwarded-For",
+		"Proxy-Client-IP",
+		"WL-Proxy-Client-IP",
+	}
+
+	for _, h := range headers {
+		ipList := r.Header.Get(h)
+		if ipList == "" {
+			continue
+		}
+		// 取第一个非空 IP（X-Forwarded-For 可能是逗号分隔）
+		for _, ip := range strings.Split(ipList, ",") {
+			ip = strings.TrimSpace(ip)
+			if ip != "" && ip != "unknown" {
+				return ip
+			}
 		}
 	}
-	if ip == "" {
-		ip = r.Header.Get("Proxy-Client-IP")
+
+	// 2. 从 RemoteAddr 获取
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		ip = r.RemoteAddr // fallback 原值
 	}
-	if ip == "" {
-		ip = r.Header.Get("WL-Proxy-Client-IP")
+
+	if ip == "" || ip == "unknown" {
+		ip = r.RemoteAddr // fallback 原值
 	}
-	if ip == "" {
-		ip = r.Header.Get("WL-Proxy-Client-IP")
+
+	if ip == "::1" {
+		ip = "127.0.0.1"
 	}
-	if ip == "" {
-		ip = r.RemoteAddr
-		if idx := strings.Index(ip, ":"); idx != -1 {
-			ip = ip[:idx]
-		}
-	}
+
 	return ip
 }
