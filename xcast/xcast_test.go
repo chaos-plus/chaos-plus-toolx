@@ -33,6 +33,9 @@ func TestCast(t *testing.T) {
 	require.Equal(t, false, ToBool("0"))
 	require.Equal(t, true, ToBool("1"))
 
+	require.Equal(t, false, ToBool("false"))
+	require.Equal(t, true, ToBool("true"))
+
 	require.Equal(t, float64(1.0), ToFloat64("1"))
 	require.Equal(t, float32(1.0), ToFloat32("1"))
 
